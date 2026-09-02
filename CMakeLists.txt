@@ -9,11 +9,12 @@ project(svg_converter)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set ( TARGET_SRCS
     src/main.cpp
+    src/png_wrapper.cpp
 )
 
 set ( COMMON_SRCS
@@ -25,9 +26,7 @@ set ( TESTS_SRCS
     tests/image_utils.cpp
 )
 
-#set_source_files_properties(
-#    ${COMMON_SRCS} PROPERTIES COMPILE_FLAGS 
-#    "")
+find_package(PNG REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -41,8 +40,9 @@ enable_testing()
 FetchContent_MakeAvailable(googletest)
 
 add_executable(svg_converter ${TARGET_SRCS} ${COMMON_SRCS} )
+target_link_libraries(svg_converter PNG::PNG)   
 
-set(GCC_COMPILE_OPTIONS "-m64;-std=c++20;-Wall;-Wextra;-Wredundant-decls;-Wmain;-Wundef;-Winline;-Wswitch-enum;-Wmissing-declarations;-Wnon-virtual-dtor;-Wzero-as-null-pointer-constant;-Winit-self;-Wshadow;-Wswitch-default;-Wfloat-equal;-Wunreachable-code;-ftemplate-depth=128;")
+set(GCC_COMPILE_OPTIONS "-m64;-std=c++23;-Wall;-Wextra;-Wredundant-decls;-Wmain;-Wundef;-Winline;-Wswitch-enum;-Wmissing-declarations;-Wnon-virtual-dtor;-Wzero-as-null-pointer-constant;-Winit-self;-Wshadow;-Wswitch-default;-Wfloat-equal;-Wunreachable-code;-ftemplate-depth=128;")
 set(GCC_COMPILE_DEBUG_OPTIONS "${GCC_COMPILE_OPTIONS};-ggdb;-O0")
 set(GCC_COMPILE_RELEASE_OPTIONS "${GCC_COMPILE_OPTIONS};-O3")
 target_compile_options(svg_converter PUBLIC "$<$<CONFIG:Debug>:${GCC_COMPILE_DEBUG_OPTIONS}>")
@@ -52,7 +52,7 @@ add_executable(tests ${COMMON_SRCS} ${TESTS_SRCS} )
 target_include_directories(tests PRIVATE . src/)
 target_link_libraries(tests GTest::gtest_main GTest::gmock_main) 
 
-set(GCC_TESTS_COMPILE_OPTIONS "-m64;-std=c++20")
+set(GCC_TESTS_COMPILE_OPTIONS "-m64;-std=c++23")
 set(GCC_TESTS_COMPILE_DEBUG_OPTIONS "${GCC_TESTS_COMPILE_OPTIONS};-ggdb;-O0")
 set(GCC_TESTS_COMPILE_RELEASE_OPTIONS "${GCC_TESTS_COMPILE_OPTIONS};-O3")
 target_compile_options(tests PUBLIC "$<$<CONFIG:Debug>:${GCC_TESTS_COMPILE_DEBUG_OPTIONS}>")

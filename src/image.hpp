@@ -22,17 +22,24 @@ struct L
     unsigned char l;
 };
 
+class PngWrapper;
+
 template <typename T>
 class Image
 {
+    friend class PngWrapper;
+
 public:
-    Image(unsigned width, unsigned height) : width(width), height(height), pixels(width * height) {}
+    Image(unsigned _width, unsigned _height) : width(_width), height(_height), pixels(_width * _height) {}
 
     unsigned getWidth() const { return width; }
     unsigned getHeight() const { return height; }
 
     const T &getPixel(unsigned x, unsigned y) const { return pixels[y * width + x]; }
     void setPixel(unsigned x, unsigned y, const T &pixel) { pixels[y * width + x] = pixel; }
+
+protected:
+    T *getDataPointer() { return pixels.data(); }
 
 private:
     unsigned width;
