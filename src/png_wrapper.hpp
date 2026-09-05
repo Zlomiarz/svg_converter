@@ -3,6 +3,7 @@
 #include <expected>
 #include <filesystem>
 #include <memory>
+#include <variant>
 #include <png.h>
 
 #include "image.hpp"
@@ -13,6 +14,11 @@ enum class Error
     InvalidFormat,
     ReadError
 };
+
+using AnyImage = std::variant<
+    Image<L>,
+    Image<RGB>,
+    Image<RGBA>>;
 
 class PngWrapper
 {
@@ -57,55 +63,67 @@ class PngWrapper
     {
     public:
         RowPointers(png_structp _png_ptr, png_infop _info_ptr) : row_pointers(nullptr), png_ptr(_png_ptr), info_ptr(_info_ptr) {}
-        ~RowPointers()
-        {
-            if (row_pointers)
-            {
-                png_free(png_ptr, row_pointers);
-                row_pointers = nullptr;
-            }
-        }
+        ~RowPointers();
+
         RowPointers(const RowPointers &) = delete;
         RowPointers &operator=(const RowPointers &) = delete;
         RowPointers(RowPointers &&) = delete;
         RowPointers &operator=(RowPointers &&) = delete;
 
-        void setup(png_bytep data, size_t buffer_size, unsigned width, unsigned height, unsigned bitdepth, unsigned channels)
-        {
-            row_pointers = (png_bytepp)png_malloc(png_ptr, sizeof(png_bytepp) * height);
-            const unsigned int stride = width * bitdepth * channels / 8;
-            if (stride * height > buffer_size)
-            {
-                throw std::runtime_error("stride * height > buffer_size in setup_row_pointers (loadpng)");
-            }
-            for (unsigned i = 0; i < height; i++)
-            {
-                row_pointers[i] = data + i * stride;
-            }
-            png_set_rows(png_ptr, info_ptr, row_pointers);
-        }
+        void setup(png_bytep data, size_t buffer_size, unsigned width, unsigned height, unsigned bitdepth, unsigned channels);
         png_bytepp get() const { return row_pointers; }
+
+    private:
         png_bytepp row_pointers = nullptr;
         png_structp png_ptr = nullptr;
         png_infop info_ptr = nullptr;
     };
 
+    struct ImageInfo
+    {
+        png_uint_32 width = 0;
+        png_uint_32 height = 0;
+        png_uint_32 bitdepth = 0;
+        png_int_32 channels = 0;
+        png_int_32 color_type = 0;
+    };
+
     using FilePtr = std::unique_ptr<std::FILE, FileCloser>;
 
 public:
-    template <typename P>
-    std::expected<Image<P>, Error>
+    std::expected<AnyImage, Error>
     read_png(const std::filesystem::path &path)
     {
         auto file = open_file(path, "rb");
         auto read_info = prepare_read(file.get());
-        read_png_info(read_info);
-        Image<P> image(width, height);
+        ImageInfo image_info = read_png_info(read_info);
+        setup_read_transformations(read_info->png_ptr, image_info.color_type, image_info.bitdepth, image_info.channels);
+        if (image_info.color_type == PNG_COLOR_TYPE_RGBA)
+        {
+            return read_png_impl<RGBA>(read_info, image_info);
+        }
+        else if (image_info.color_type == PNG_COLOR_TYPE_RGB)
+        {
+            return read_png_impl<RGB>(read_info, image_info);
+        }
+        else if (image_info.color_type == PNG_COLOR_TYPE_GRAY)
+        {
+            return read_png_impl<L>(read_info, image_info);
+        }
+        else
+        {
+            return std::unexpected(Error::InvalidFormat);
+        }
+    }
+    template <typename P>
+    std::expected<Image<P>, Error> read_png_impl(std::unique_ptr<ReadInfo> &read_info, const ImageInfo &image_info)
+    {
+        Image<P> image(image_info.width, image_info.height);
         png_bytep data = reinterpret_cast<png_bytep>(image.getDataPointer());
-        size_t buffer_size = width * height * sizeof(P);
+        size_t buffer_size = image_info.width * image_info.height * sizeof(P);
 
         RowPointers row_pointers(read_info->png_ptr, read_info->info_ptr);
-        row_pointers.setup(data, buffer_size, width, height, bitdepth, channels);
+        row_pointers.setup(data, buffer_size, image_info.width, image_info.height, image_info.bitdepth, image_info.channels);
         png_read_image(read_info->png_ptr, row_pointers.get());
         png_read_end(read_info->png_ptr, read_info->end_info);
         return std::expected<Image<P>, Error>(image);
@@ -116,7 +134,9 @@ public:
     {
         auto fp = open_file(path, "wb");
         auto write_info = std::make_unique<WriteInfo>();
-
+        png_uint_32 bitdepth = 0;
+        png_int_32 channels = 0;
+        png_uint_32 color_type = 0;
         png_init_io(write_info->png_ptr, fp.get());
         if constexpr (std::is_same_v<P, RGBA>)
         {
@@ -138,7 +158,7 @@ public:
         }
         png_set_IHDR(write_info->png_ptr, write_info->info_ptr, image.getWidth(), image.getHeight(), 8, color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
         png_bytep data = reinterpret_cast<png_bytep>(image.getDataPointer());
-        size_t buffer_size = width * height * sizeof(P);
+        size_t buffer_size = image.getWidth() * image.getHeight() * sizeof(P);
 
         RowPointers rowPointers(write_info->png_ptr, write_info->info_ptr);
         rowPointers.setup(data, buffer_size, image.getWidth(), image.getHeight(), bitdepth, channels);
@@ -154,10 +174,7 @@ private:
 
     std::unique_ptr<ReadInfo> prepare_read(FILE *fp);
 
-    void read_png_info(std::unique_ptr<ReadInfo> &read_info);
+    ImageInfo read_png_info(std::unique_ptr<ReadInfo> &read_info);
 
-    png_uint_32 width = 0, height = 0;
-    png_uint_32 bitdepth = 0;
-    png_int_32 channels = 0;
-    png_int_32 color_type = 0;
+    void setup_read_transformations(png_structp png_ptr, png_int_32 &color_type, png_uint_32 &bitdepth, png_int_32 &channels);
 };

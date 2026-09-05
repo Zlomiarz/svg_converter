@@ -7,6 +7,11 @@ struct RGB
     unsigned char r;
     unsigned char g;
     unsigned char b;
+
+    unsigned char getGrayscaleValue() const
+    {
+        return static_cast<unsigned char>(0.299 * r + 0.587 * g + 0.114 * b);
+    }
 };
 
 struct RGBA
@@ -15,11 +20,19 @@ struct RGBA
     unsigned char g;
     unsigned char b;
     unsigned char a;
+    unsigned char getGrayscaleValue() const
+    {
+        return static_cast<unsigned char>(0.299 * r + 0.587 * g + 0.114 * b);
+    }
 };
 
 struct L
 {
     unsigned char l;
+    unsigned char getGrayscaleValue() const
+    {
+        return l;
+    }
 };
 
 class PngWrapper;

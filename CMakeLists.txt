@@ -15,6 +15,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set ( TARGET_SRCS
     src/main.cpp
     src/png_wrapper.cpp
+    src/skeletonize.cpp
 )
 
 set ( COMMON_SRCS

@@ -57,6 +57,30 @@ PngWrapper::ReadInfo::~ReadInfo()
     }
 }
 
+PngWrapper::RowPointers::~RowPointers()
+{
+    if (row_pointers)
+    {
+        png_free(png_ptr, row_pointers);
+        row_pointers = nullptr;
+    }
+}
+
+void PngWrapper::RowPointers::setup(png_bytep data, size_t buffer_size, unsigned width, unsigned height, unsigned bitdepth, unsigned channels)
+{
+    row_pointers = (png_bytepp)png_malloc(png_ptr, sizeof(png_bytepp) * height);
+    const unsigned int stride = width * bitdepth * channels / 8;
+    if (stride * height > buffer_size)
+    {
+        throw std::runtime_error("stride * height > buffer_size in setup_row_pointers (loadpng)");
+    }
+    for (unsigned i = 0; i < height; i++)
+    {
+        row_pointers[i] = data + i * stride;
+    }
+    png_set_rows(png_ptr, info_ptr, row_pointers);
+}
+
 PngWrapper::FilePtr PngWrapper::open_file(const std::filesystem::path &path, const char *mode)
 {
     auto fp = std::unique_ptr<FILE, FileCloser>(fopen(path.string().c_str(), mode), FileCloser());
@@ -65,15 +89,16 @@ PngWrapper::FilePtr PngWrapper::open_file(const std::filesystem::path &path, con
     return fp;
 }
 
-void PngWrapper::read_png_info(std::unique_ptr<ReadInfo> &read_info)
+PngWrapper::ImageInfo PngWrapper::read_png_info(std::unique_ptr<ReadInfo> &read_info)
 {
+    ImageInfo image_info;
     png_read_info(read_info->png_ptr, read_info->info_ptr);
-    width = png_get_image_width(read_info->png_ptr, read_info->info_ptr);
-    height = png_get_image_height(read_info->png_ptr, read_info->info_ptr);
-
-    bitdepth = png_get_bit_depth(read_info->png_ptr, read_info->info_ptr);
-    channels = png_get_channels(read_info->png_ptr, read_info->info_ptr);
-    color_type = png_get_color_type(read_info->png_ptr, read_info->info_ptr);
+    image_info.width = png_get_image_width(read_info->png_ptr, read_info->info_ptr);
+    image_info.height = png_get_image_height(read_info->png_ptr, read_info->info_ptr);
+    image_info.bitdepth = png_get_bit_depth(read_info->png_ptr, read_info->info_ptr);
+    image_info.channels = png_get_channels(read_info->png_ptr, read_info->info_ptr);
+    image_info.color_type = png_get_color_type(read_info->png_ptr, read_info->info_ptr);
+    return image_info;
 }
 
 std::unique_ptr<PngWrapper::ReadInfo> PngWrapper::prepare_read(FILE *fp)
@@ -91,4 +116,30 @@ std::unique_ptr<PngWrapper::ReadInfo> PngWrapper::prepare_read(FILE *fp)
     png_init_io(read_info->png_ptr, fp);
     png_set_sig_bytes(read_info->png_ptr, number_to_check);
     return read_info;
+}
+
+void PngWrapper::setup_read_transformations(png_structp png_ptr, png_int_32 &color_type, png_uint_32 &bitdepth, png_int_32 &channels)
+{
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
+    {
+        png_set_palette_to_rgb(png_ptr);
+        color_type = PNG_COLOR_TYPE_RGB;
+        channels = 3;
+    }
+    if (color_type == PNG_COLOR_TYPE_GRAY && bitdepth < 8)
+    {
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+        bitdepth = 8;
+    }
+    if (png_get_valid(png_ptr, nullptr, PNG_INFO_tRNS))
+    {
+        png_set_tRNS_to_alpha(png_ptr);
+        color_type = (color_type == PNG_COLOR_TYPE_PALETTE) ? PNG_COLOR_TYPE_RGBA : PNG_COLOR_TYPE_RGB_ALPHA;
+        channels += 1;
+    }
+    if (bitdepth == 16)
+    {
+        png_set_strip_16(png_ptr);
+        bitdepth = 8;
+    }
 }
