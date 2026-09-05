@@ -117,10 +117,10 @@ inline Image<RGBA> prepare_transparent_image(const Image<L> &inputImage)
 }
 
 template <typename P>
-void add_borders(const Image<P> &image)
+void add_borders(Image<P> &image)
 {
-    width = image.getWidth();
-    height = image.getHeight();
+    auto width = image.getWidth();
+    auto height = image.getHeight();
     P black;
     for (unsigned x = 0; x < width; ++x)
     {
@@ -134,7 +134,7 @@ void add_borders(const Image<P> &image)
     }
 }
 
-std::expected<std::pair<unsigned, unsigned>, bool> find_pixel(const Image<L> &image, unsigned char target_value)
+inline std::expected<std::pair<unsigned, unsigned>, bool> find_pixel(const Image<L> &image, unsigned char target_value)
 {
     for (unsigned y = 0; y < image.getHeight(); ++y)
     {

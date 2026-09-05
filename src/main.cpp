@@ -5,6 +5,7 @@
 #include "image_utils.hpp"
 #include "png_wrapper.hpp"
 #include "skeletonize.hpp"
+#include "region.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -26,6 +27,8 @@ int main(int argc, char *argv[])
                    invertImage(grayscale);
                    skeletonizeImage(grayscale);
                    invertImage(grayscale);
+                   add_borders(grayscale);
+
                    pngwrapper.write_png("output2.png", grayscale); },
                result.value());
 
