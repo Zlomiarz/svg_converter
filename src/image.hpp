@@ -4,9 +4,9 @@
 
 struct RGB
 {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
+    unsigned char r = 0;
+    unsigned char g = 0;
+    unsigned char b = 0;
 
     unsigned char getGrayscaleValue() const
     {
@@ -16,10 +16,10 @@ struct RGB
 
 struct RGBA
 {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char a;
+    unsigned char r = 0;
+    unsigned char g = 0;
+    unsigned char b = 0;
+    unsigned char a = 0;
     unsigned char getGrayscaleValue() const
     {
         return static_cast<unsigned char>(0.299 * r + 0.587 * g + 0.114 * b);
@@ -28,7 +28,7 @@ struct RGBA
 
 struct L
 {
-    unsigned char l;
+    unsigned char l = 0;
     unsigned char getGrayscaleValue() const
     {
         return l;

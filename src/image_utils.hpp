@@ -113,3 +113,21 @@ inline Image<RGBA> prepare_transparent_image(const Image<L> &inputImage)
 
     return outputImage;
 }
+
+template <typename P>
+void add_borders(const Image<P> &image)
+{
+    width = image.getWidth();
+    height = image.getHeight();
+    P black;
+    for (unsigned x = 0; x < width; ++x)
+    {
+        image.setPixel(x, 0, black);          // Top border
+        image.setPixel(x, height - 1, black); // Bottom border
+    }
+    for (unsigned y = 0; y < height; ++y)
+    {
+        image.setPixel(0, y, black);         // Left border
+        image.setPixel(width - 1, y, black); // Right border
+    }
+}
