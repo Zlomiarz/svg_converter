@@ -1,6 +1,8 @@
 #pragma once
 #include "image.hpp"
 
+#include <expected>
+
 template <typename P>
 Image<L> convertToGrayscale(const Image<P> &inputImage)
 {
@@ -130,4 +132,19 @@ void add_borders(const Image<P> &image)
         image.setPixel(0, y, black);         // Left border
         image.setPixel(width - 1, y, black); // Right border
     }
+}
+
+std::expected<std::pair<unsigned, unsigned>, bool> find_pixel(const Image<L> &image, unsigned char target_value)
+{
+    for (unsigned y = 0; y < image.getHeight(); ++y)
+    {
+        for (unsigned x = 0; x < image.getWidth(); ++x)
+        {
+            if (image.getPixel(x, y).l == target_value)
+            {
+                return std::make_pair(x, y);
+            }
+        }
+    }
+    return std::unexpected(false); // Return unexpected if not found
 }
