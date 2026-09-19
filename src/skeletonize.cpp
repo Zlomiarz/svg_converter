@@ -17,7 +17,7 @@ inline int A(const std::vector<unsigned> &values)
     return count;
 }
 
-inline int B(const std::vector<unsigned> &values)
+inline long B(const std::vector<unsigned> &values)
 {
     return std::count_if(values.begin(), values.end(), [](unsigned value)
                          { return value != 0; });

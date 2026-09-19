@@ -104,8 +104,10 @@ PngWrapper::ImageInfo PngWrapper::read_png_info(std::unique_ptr<ReadInfo> &read_
 std::unique_ptr<PngWrapper::ReadInfo> PngWrapper::prepare_read(FILE *fp)
 {
     unsigned char header[9];
-    int number_to_check = 8;
-    fread(header, 1, number_to_check, fp);
+    size_t number_to_check = 8;
+    auto read = fread(header, 1, number_to_check, fp);
+    if (read != number_to_check)
+        throw std::runtime_error("can not read png file");
     int is_png = !png_sig_cmp(header, 0, number_to_check);
     if (!is_png)
     {
@@ -114,11 +116,11 @@ std::unique_ptr<PngWrapper::ReadInfo> PngWrapper::prepare_read(FILE *fp)
 
     auto read_info = std::make_unique<ReadInfo>();
     png_init_io(read_info->png_ptr, fp);
-    png_set_sig_bytes(read_info->png_ptr, number_to_check);
+    png_set_sig_bytes(read_info->png_ptr, static_cast<int>(number_to_check));
     return read_info;
 }
 
-void PngWrapper::setup_read_transformations(png_structp png_ptr, png_int_32 &color_type, png_uint_32 &bitdepth, png_int_32 &channels)
+void PngWrapper::setup_read_transformations(png_structp png_ptr, png_int_32 &color_type, png_uint_32 &bitdepth, png_uint_32 &channels)
 {
     if (color_type == PNG_COLOR_TYPE_PALETTE)
     {

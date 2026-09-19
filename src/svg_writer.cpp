@@ -1,6 +1,6 @@
 #include "svg_writer.hpp"
 
-SvgWriter::SvgWriter(const std::filesystem::path &filename, int width, int height)
+SvgWriter::SvgWriter(const std::filesystem::path &filename, unsigned width, unsigned height)
 {
     svg_file.open(filename);
     if (!svg_file.is_open())
@@ -16,7 +16,7 @@ SvgWriter::~SvgWriter()
     svg_file.close();
 }
 
-void SvgWriter::write_svg_header(int width, int height)
+void SvgWriter::write_svg_header(unsigned width, unsigned height)
 {
     svg_file << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
     svg_file << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" << width << "\" height=\"" << height << "\">\n";

@@ -45,7 +45,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(svg_converter ${TARGET_SRCS} ${COMMON_SRCS} )
 target_link_libraries(svg_converter PNG::PNG)   
 
-set(GCC_COMPILE_OPTIONS "-m64;-std=c++23;-Wall;-Wextra;-Wredundant-decls;-Wmain;-Wundef;-Winline;-Wswitch-enum;-Wmissing-declarations;-Wnon-virtual-dtor;-Wzero-as-null-pointer-constant;-Winit-self;-Wshadow;-Wswitch-default;-Wfloat-equal;-Wunreachable-code;-ftemplate-depth=128;")
+set(GCC_COMPILE_OPTIONS "-m64;-std=c++23;-Wall;-Wextra;-Wpedantic;-Wshadow;-Wconversion;-Wsign-conversion;-Wformat=2;-Wundef;-Wswitch-enum;-Wnon-virtual-dtor;-Wzero-as-null-pointer-constant;-Werror")
 set(GCC_COMPILE_DEBUG_OPTIONS "${GCC_COMPILE_OPTIONS};-ggdb;-O0")
 set(GCC_COMPILE_RELEASE_OPTIONS "${GCC_COMPILE_OPTIONS};-O3")
 target_compile_options(svg_converter PUBLIC "$<$<CONFIG:Debug>:${GCC_COMPILE_DEBUG_OPTIONS}>")

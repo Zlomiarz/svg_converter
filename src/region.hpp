@@ -21,8 +21,8 @@ class Region
         {
             auto current = pixels.back();
             pixels.pop_back();
-            double x = current.x;
-            double y = current.y;
+            unsigned x = static_cast<unsigned>(std::floor(current.x));
+            unsigned y = static_cast<unsigned>(std::floor(current.y));
 
             L pixel = image.getPixel(x, y);
             if (pixel.l == 0)
@@ -32,17 +32,17 @@ class Region
             pixel.l = 0;
             image.setPixel(x, y, pixel);
 
-            add_next_pixel(pixels, {x + 1, y});
-            add_next_pixel(pixels, {x - 1, y});
-            add_next_pixel(pixels, {x, y + 1});
-            add_next_pixel(pixels, {x, y - 1});
+            add_next_pixel(pixels, {x + 1.0, static_cast<double>(y)});
+            add_next_pixel(pixels, {x - 1.0, static_cast<double>(y)});
+            add_next_pixel(pixels, {static_cast<double>(x), y + 1.0});
+            add_next_pixel(pixels, {static_cast<double>(x), y - 1.0});
         }
     }
 
     void add_next_pixel(std::list<Point> &pixels, const Point &coords)
     {
-        unsigned x = coords.x;
-        unsigned y = coords.y;
+        unsigned x = static_cast<unsigned>(coords.x);
+        unsigned y = static_cast<unsigned>(coords.y);
         if (x >= image.getWidth() || y >= image.getHeight())
             return;
         if (0 == image.getPixel(x, y).l)
@@ -55,8 +55,8 @@ class Region
 
     unsigned get_cell(const Point &coords) const
     {
-        unsigned x = coords.x;
-        unsigned y = coords.y;
+        unsigned x = static_cast<unsigned>(coords.x);
+        unsigned y = static_cast<unsigned>(coords.y);
         if (x >= image.getWidth() || y >= image.getHeight())
             return 0;
         return grid[y * image.getWidth() + x];
@@ -64,8 +64,8 @@ class Region
 
     void set_cell(const Point &coords, unsigned value)
     {
-        unsigned x = coords.x;
-        unsigned y = coords.y;
+        unsigned x = static_cast<unsigned>(coords.x);
+        unsigned y = static_cast<unsigned>(coords.y);
         if (x >= image.getWidth() || y >= image.getHeight())
             return;
         grid[y * image.getWidth() + x] = value;

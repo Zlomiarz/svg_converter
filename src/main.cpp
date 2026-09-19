@@ -30,7 +30,7 @@ void generate_svg(Image<L> &image, const std::string &outpath)
     }
 }
 
-int main(int argc, char *argv[])
+int main(int, char **)
 {
     /*if (argc < 2)
     {

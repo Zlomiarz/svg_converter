@@ -84,7 +84,7 @@ class PngWrapper
         png_uint_32 width = 0;
         png_uint_32 height = 0;
         png_uint_32 bitdepth = 0;
-        png_int_32 channels = 0;
+        png_uint_32 channels = 0;
         png_int_32 color_type = 0;
     };
 
@@ -135,8 +135,8 @@ public:
         auto fp = open_file(path, "wb");
         auto write_info = std::make_unique<WriteInfo>();
         png_uint_32 bitdepth = 0;
-        png_int_32 channels = 0;
-        png_uint_32 color_type = 0;
+        png_uint_32 channels = 0;
+        png_int_32 color_type = 0;
         png_init_io(write_info->png_ptr, fp.get());
         if constexpr (std::is_same_v<P, RGBA>)
         {
@@ -176,5 +176,5 @@ private:
 
     ImageInfo read_png_info(std::unique_ptr<ReadInfo> &read_info);
 
-    void setup_read_transformations(png_structp png_ptr, png_int_32 &color_type, png_uint_32 &bitdepth, png_int_32 &channels);
+    void setup_read_transformations(png_structp png_ptr, png_int_32 &color_type, png_uint_32 &bitdepth, png_uint_32 &channels);
 };
