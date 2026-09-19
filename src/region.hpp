@@ -1,20 +1,17 @@
 #pragma once
 
-#include "image.hpp"
 #include <list>
+#include <cmath>
 
-class Point
-{
-public:
-    Point(double x_, double y_) : x(x_), y(y_) {}
-    double x, y;
-};
+#include "image.hpp"
+#include "shape.hpp"
+#include "point.hpp"
 
 class Region
 {
     Image<L> &image;
     std::vector<unsigned> grid;
-    std::vector<std::pair<Point, Point>> lines;
+    std::list<std::pair<Point, Point>> lines;
 
     void build_region(const Point &coords)
     {
@@ -48,6 +45,8 @@ class Region
         unsigned y = coords.y;
         if (x >= image.getWidth() || y >= image.getHeight())
             return;
+        if (0 == image.getPixel(x, y).l)
+            return;
         if (get_cell(coords) == 0)
         {
             pixels.push_back(coords);
@@ -76,8 +75,7 @@ class Region
     {
         for (unsigned y = 0; y < image.getHeight() - 1; ++y)
         {
-            unsigned x = 0;
-            while (x < image.getWidth() - 1)
+            for (unsigned x = 0; x < image.getWidth() - 1; ++x)
             {
                 int v = 0;
                 if (get_cell(Point(x, y)) == 1)
@@ -151,5 +149,11 @@ public:
     {
         grid.resize(image.getWidth() * image.getHeight(), 0);
         build_region(coords_);
+        convert_grid_to_lines();
+    }
+
+    auto &get_lines() const
+    {
+        return lines;
     }
 };

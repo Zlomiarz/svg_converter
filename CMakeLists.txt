@@ -16,6 +16,8 @@ set ( TARGET_SRCS
     src/main.cpp
     src/png_wrapper.cpp
     src/skeletonize.cpp
+    src/image_utils.cpp
+    src/svg_writer.cpp 
 )
 
 set ( COMMON_SRCS

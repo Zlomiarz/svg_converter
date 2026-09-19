@@ -6,6 +6,32 @@
 #include "png_wrapper.hpp"
 #include "skeletonize.hpp"
 #include "region.hpp"
+#include "shape.hpp"
+#include "svg_writer.hpp"
+#include "visvalingam.hpp"
+
+void generate_svg(Image<L> &image, const std::string &outpath)
+{
+    binarizeImage(image, 128);
+    invertImage(image);
+    skeletonizeImage(image);
+    invertImage(image);
+    add_borders(image);
+    auto coords = find_pixel(image, 255);
+    std::cout << "Generating SVG..." << std::endl;
+    SvgWriter svg_writer(outpath + ".svg", image.getWidth(), image.getHeight());
+    while (coords.has_value())
+    {
+        std::cout << "Found pixel at: (" << coords->first << ", " << coords->second << ")" << std::endl;
+        Region region(Point(coords->first, coords->second), image);
+        auto lines = region.get_lines();
+        Shape shape(lines);
+        std::cout
+            << "Number of lines in region: " << lines.size() << std::endl;
+        svg_writer.add_path(shape, "black", 1);
+        coords = find_pixel(image, 255);
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -14,22 +40,16 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }*/
     auto inpath = "cat.png";
-    auto outpath = "output.png";
+    auto outpath = "output";
     auto start = std::chrono::high_resolution_clock::now();
     PngWrapper pngwrapper;
     auto result = pngwrapper.read_png(inpath);
     std::visit([&pngwrapper, &outpath](auto &&image)
                {
-                   auto transparent = prepare_transparent_image(image);
-                   pngwrapper.write_png(outpath, transparent);
-                   auto grayscale = convertToGrayscale(image);
-                   binarizeImage(grayscale, 128);
-                   invertImage(grayscale);
-                   skeletonizeImage(grayscale);
-                   invertImage(grayscale);
-                   add_borders(grayscale);
-
-                   pngwrapper.write_png("output2.png", grayscale); },
+                    auto transparent = prepare_transparent_image(image);
+                    pngwrapper.write_png(outpath+std::string(".png"), transparent);
+                    auto grayscale = convertToGrayscale(image);
+                    generate_svg(grayscale, outpath); },
                result.value());
 
     auto end = std::chrono::high_resolution_clock::now();
