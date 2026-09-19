@@ -32,7 +32,6 @@ public:
             if (points.size() <= 3)
                 break;
             auto it = find_minimal_area();
-            std::cout << "minimal area" << it->area << std::endl;
             if (it->area > threshold)
                 break;
             it = points.erase(it);

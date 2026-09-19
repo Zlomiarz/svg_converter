@@ -22,12 +22,9 @@ void generate_svg(Image<L> &image, const std::string &outpath)
     SvgWriter svg_writer(outpath + ".svg", image.getWidth(), image.getHeight());
     while (coords.has_value())
     {
-        std::cout << "Found pixel at: (" << coords->first << ", " << coords->second << ")" << std::endl;
         Region region(Point(coords->first, coords->second), image);
         auto lines = region.get_lines();
         Shape shape(lines);
-        std::cout
-            << "Number of lines in region: " << lines.size() << std::endl;
         svg_writer.add_path(shape, "black", 1);
         coords = find_pixel(image, 255);
     }

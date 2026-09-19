@@ -63,11 +63,8 @@ public:
     {
         for (size_t i = 0; i < paths.size(); ++i)
         {
-            auto l1 = paths[i].points.size();
             Visvalingam v(paths[i], 10);
             paths[i] = v.get_simplified_path();
-            auto l2 = paths[i].points.size();
-            std::cout << "visivigam removed " << l1 - l2 << " points" << std::endl;
         }
     }
 
