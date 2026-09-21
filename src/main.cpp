@@ -1,6 +1,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
+
+#include "CLI11.hpp"
+
 #include "image.hpp"
 #include "image_utils.hpp"
 #include "png_wrapper.hpp"
@@ -10,11 +13,12 @@
 #include "svg_writer.hpp"
 #include "visvalingam.hpp"
 
-void generate_svg(Image<L> &image, const std::string &outpath)
+void generate_svg(Image<L> &image, const std::string &outpath, bool skeletonize)
 {
     binarizeImage(image, 128);
     invertImage(image);
-    skeletonizeImage(image);
+    if (skeletonize)
+        skeletonizeImage(image);
     invertImage(image);
     add_borders(image);
     auto coords = find_pixel(image, 255);
@@ -30,23 +34,33 @@ void generate_svg(Image<L> &image, const std::string &outpath)
     }
 }
 
-int main(int, char **)
+int main(int argc, char *argv[])
 {
-    /*if (argc < 2)
-    {
-        return EXIT_FAILURE;
-    }*/
-    auto inpath = "cat.png";
-    auto outpath = "output";
+    CLI::App app{"Application that converts PNG/JPEG images into SVG coloring pages"};
+    argv = app.ensure_utf8(argv);
+
+    std::string inpath = "in.png";
+    app.add_option("-f,--file", inpath, "Input file")->required();
+    std::string outpath = "out";
+    app.add_option("-o,--out", outpath, "Output path without file extension. PNG/SVG will be added autmaticaly")->required();
+    bool generate_mask = false;
+    app.add_flag("-m", generate_mask, "Generate transparent PNG mask");
+    bool skeletonize = false;
+    app.add_flag("-s", skeletonize, "Run skeltonization algorithm");
+
+    CLI11_PARSE(app, argc, argv);
+
     auto start = std::chrono::high_resolution_clock::now();
     PngWrapper pngwrapper;
     auto result = pngwrapper.read_png(inpath);
-    std::visit([&pngwrapper, &outpath](auto &&image)
+    std::visit([&pngwrapper, &outpath, generate_mask, skeletonize](auto &&image)
                {
-                    auto transparent = prepare_transparent_image(image);
-                    pngwrapper.write_png(outpath+std::string(".png"), transparent);
+                    if (generate_mask){
+                        auto transparent = prepare_transparent_image(image);
+                        pngwrapper.write_png(outpath+std::string(".png"), transparent);
+                    }
                     auto grayscale = convertToGrayscale(image);
-                    generate_svg(grayscale, outpath); },
+                    generate_svg(grayscale, outpath, skeletonize); },
                result.value());
 
     auto end = std::chrono::high_resolution_clock::now();

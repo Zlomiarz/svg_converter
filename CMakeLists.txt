@@ -43,6 +43,7 @@ enable_testing()
 FetchContent_MakeAvailable(googletest)
 
 add_executable(svg_converter ${TARGET_SRCS} ${COMMON_SRCS} )
+include_directories(thirdparty)
 target_link_libraries(svg_converter PNG::PNG)   
 
 set(GCC_COMPILE_OPTIONS "-m64;-std=c++23;-Wall;-Wextra;-Wpedantic;-Wshadow;-Wconversion;-Wsign-conversion;-Wformat=2;-Wundef;-Wswitch-enum;-Wnon-virtual-dtor;-Wzero-as-null-pointer-constant;-Werror")
