@@ -81,14 +81,6 @@ void PngWrapper::RowPointers::setup(png_bytep data, size_t buffer_size, unsigned
     png_set_rows(png_ptr, info_ptr, row_pointers);
 }
 
-PngWrapper::FilePtr PngWrapper::open_file(const std::filesystem::path &path, const char *mode)
-{
-    auto fp = std::unique_ptr<FILE, FileCloser>(fopen(path.string().c_str(), mode), FileCloser());
-    if (!fp)
-        throw std::runtime_error("file not found in open_file (loadpng)");
-    return fp;
-}
-
 PngWrapper::ImageInfo PngWrapper::read_png_info(std::unique_ptr<ReadInfo> &read_info)
 {
     ImageInfo image_info;

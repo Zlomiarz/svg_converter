@@ -15,6 +15,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set ( TARGET_SRCS
     src/main.cpp
     src/png_wrapper.cpp
+    src/jpeg_wrapper.cpp
     src/skeletonize.cpp
     src/image_utils.cpp
     src/svg_writer.cpp 
@@ -31,6 +32,8 @@ set ( TESTS_SRCS
 
 find_package(PNG REQUIRED)
 
+find_package(JPEG REQUIRED)
+
 include(FetchContent)
 FetchContent_Declare(
     googletest
@@ -44,7 +47,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(svg_converter ${TARGET_SRCS} ${COMMON_SRCS} )
 include_directories(thirdparty)
-target_link_libraries(svg_converter PNG::PNG)   
+target_link_libraries(svg_converter PNG::PNG JPEG::JPEG)   
 
 set(GCC_COMPILE_OPTIONS "-m64;-std=c++23;-Wall;-Wextra;-Wpedantic;-Wshadow;-Wconversion;-Wsign-conversion;-Wformat=2;-Wundef;-Wswitch-enum;-Wnon-virtual-dtor;-Wzero-as-null-pointer-constant;-Werror")
 set(GCC_COMPILE_DEBUG_OPTIONS "${GCC_COMPILE_OPTIONS};-ggdb;-O0")

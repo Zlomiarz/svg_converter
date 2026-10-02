@@ -36,11 +36,13 @@ struct L
 };
 
 class PngWrapper;
+class JpegWrapper;
 
 template <typename T>
 class Image
 {
     friend class PngWrapper;
+    friend class JpegWrapper;
 
 public:
     Image(unsigned _width, unsigned _height) : width(_width), height(_height), pixels(_width * _height) {}

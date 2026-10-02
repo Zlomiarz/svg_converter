@@ -6,7 +6,7 @@
 
 #include "image.hpp"
 #include "image_utils.hpp"
-#include "png_wrapper.hpp"
+#include "image_reader.hpp"
 #include "skeletonize.hpp"
 #include "region.hpp"
 #include "shape.hpp"
@@ -51,11 +51,21 @@ int main(int argc, char *argv[])
     CLI11_PARSE(app, argc, argv);
 
     auto start = std::chrono::high_resolution_clock::now();
-    PngWrapper pngwrapper;
-    auto result = pngwrapper.read_png(inpath);
-    std::visit([&pngwrapper, &outpath, generate_mask, skeletonize](auto &&image)
+
+    ImageReader reader;
+
+    auto result = reader.read(inpath);
+
+    if (!result)
+    {
+
+        return EXIT_FAILURE;
+    }
+
+    std::visit([&outpath, generate_mask, skeletonize](auto &&image)
                {
                     if (generate_mask){
+                        PngWrapper pngwrapper;
                         auto transparent = prepare_transparent_image(image);
                         pngwrapper.write_png(outpath+std::string(".png"), transparent);
                     }

@@ -3,22 +3,10 @@
 #include <expected>
 #include <filesystem>
 #include <memory>
-#include <variant>
 #include <png.h>
 
 #include "image.hpp"
-
-enum class Error
-{
-    FileNotFound,
-    InvalidFormat,
-    ReadError
-};
-
-using AnyImage = std::variant<
-    Image<L>,
-    Image<RGB>,
-    Image<RGBA>>;
+#include "wrappers_utils.hpp"
 
 class PngWrapper
 {
@@ -50,15 +38,6 @@ class PngWrapper
         png_infop end_info = nullptr;
     };
 
-    class FileCloser
-    {
-    public:
-        void operator()(std::FILE *file) const noexcept
-        {
-            std::fclose(file);
-        }
-    };
-
     class RowPointers
     {
     public:
@@ -88,13 +67,15 @@ class PngWrapper
         png_int_32 color_type = 0;
     };
 
-    using FilePtr = std::unique_ptr<std::FILE, FileCloser>;
-
 public:
     std::expected<AnyImage, Error>
     read_png(const std::filesystem::path &path)
     {
-        auto file = open_file(path, "rb");
+        auto file = std::unique_ptr<FILE, FileCloser>(fopen(path.string().c_str(), "rb"), FileCloser());
+        if (!file)
+        {
+            return std::unexpected(Error::FileNotFound);
+        }
         auto read_info = prepare_read(file.get());
         ImageInfo image_info = read_png_info(read_info);
         setup_read_transformations(read_info->png_ptr, image_info.color_type, image_info.bitdepth, image_info.channels);
@@ -115,6 +96,7 @@ public:
             return std::unexpected(Error::InvalidFormat);
         }
     }
+
     template <typename P>
     std::expected<Image<P>, Error> read_png_impl(std::unique_ptr<ReadInfo> &read_info, const ImageInfo &image_info)
     {
@@ -132,7 +114,11 @@ public:
     template <typename P>
     void write_png(const std::filesystem::path &path, Image<P> &image)
     {
-        auto fp = open_file(path, "wb");
+        auto fp = std::unique_ptr<FILE, FileCloser>(fopen(path.string().c_str(), "wb"), FileCloser());
+        if (!fp)
+        {
+            return;
+        }
         auto write_info = std::make_unique<WriteInfo>();
         png_uint_32 bitdepth = 0;
         png_uint_32 channels = 0;
@@ -170,8 +156,6 @@ public:
     }
 
 private:
-    FilePtr open_file(const std::filesystem::path &path, const char *mode);
-
     std::unique_ptr<ReadInfo> prepare_read(FILE *fp);
 
     ImageInfo read_png_info(std::unique_ptr<ReadInfo> &read_info);
