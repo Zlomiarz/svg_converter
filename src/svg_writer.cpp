@@ -19,7 +19,7 @@ SvgWriter::~SvgWriter()
 void SvgWriter::write_svg_header(unsigned width, unsigned height)
 {
     svg_file << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
-    svg_file << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" << width << "\" height=\"" << height << "\">\n";
+    svg_file << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"" << width << "\" height=\"" << height << "\" viewBox=\"0 0 " << width << " " << height << "\">\n";
 }
 
 void SvgWriter::add_path(const std::vector<std::pair<Point, Point>> &lines, const std::string &color, int stroke_width)
